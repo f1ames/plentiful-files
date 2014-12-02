@@ -1,23 +1,15 @@
-var fs = require('fs');
-var assert = require('assert');
-var filedb = require('../filedb.js');
-
 describe('filedb', function() {
 
-    var instance = new filedb({
-        dir: './test/files/'
-    });
-    var instanceNoPath = new filedb({
-        dir: './test/wrongpath/'
+    var fileid1, fileid2, fileid3, fileid4;
+
+    before(function() {
+        createFilesDir();
+        fileid1 = createFile('testfile1e');
+        fileid2 = createFile('testfile2e', instance.FLAG_NEW);
+        fileid3 = createFile('testfile3e', instance.FLAG_UPDATED);
+        fileid4 = createFile('testfile4e', '.invalid');
     });
 
-
-    beforeEach(function() {
-        try {
-            fs.renameSync('./test/files/testfile2', './test/files/testfile2' + instance.FLAG_NEW);
-            fs.renameSync('./test/files/testfile3', './test/files/testfile3' + instance.FLAG_UPDATED);
-        } catch(ex) {}
-    });
 
     describe('#exists()', function() {
         it('should return false when there is no file', function(done) {
@@ -28,28 +20,28 @@ describe('filedb', function() {
         });
 
         it('should return true when file exists', function(done) {
-            instance.exists('testfile1', function(exists, err, fileinfo) {
+            instance.exists(fileid1, function(exists, err, fileinfo) {
                 assert.strictEqual(exists, true);
                 done();
             });
         });
 
         it('should return true when file(.new) exists', function(done) {
-            instance.exists('testfile2', function(exists, err, fileinfo) {
+            instance.exists(fileid2, function(exists, err, fileinfo) {
                 assert.strictEqual(exists, true);
                 done();
             });
         });
 
         it('should return true when file(.updated) exists', function(done) {
-            instance.exists('testfile3', function(exists, err, fileinfo) {
+            instance.exists(fileid3, function(exists, err, fileinfo) {
                 assert.strictEqual(exists, true);
                 done();
             });
         });
 
         it('should return false when there is file but with wrong flag', function(done) {
-            instance.exists('testfile4', function(exists, err, fileinfo) {
+            instance.exists(fileid4, function(exists, err, fileinfo) {
                 assert.strictEqual(exists, false);
                 done();
             });
@@ -72,7 +64,7 @@ describe('filedb', function() {
         });
 
         it('should return fileinfo object with file, path, isNew, isUpdated, rawPath fields', function(done) {
-            instance.exists('testfile1', function(exists, err, fileinfo) {
+            instance.exists(fileid1, function(exists, err, fileinfo) {
                 assert.notStrictEqual(fileinfo.file, undefined);
                 assert.notStrictEqual(fileinfo.path, undefined);
                 assert.notStrictEqual(fileinfo.isNew, undefined);
@@ -83,7 +75,7 @@ describe('filedb', function() {
         });
 
         it('should return fileinfo object with isNew === false, isUpdated === false for normal file', function(done) {
-            instance.exists('testfile1', function(exists, err, fileinfo) {
+            instance.exists(fileid1, function(exists, err, fileinfo) {
                 assert.strictEqual(fileinfo.isNew, false);
                 assert.strictEqual(fileinfo.isUpdated, false);
                 done();
@@ -91,7 +83,7 @@ describe('filedb', function() {
         });
 
         it('should return fileinfo object with isNew === true, isUpdated === false for new file', function(done) {
-            instance.exists('testfile2', function(exists, err, fileinfo) {
+            instance.exists(fileid2, function(exists, err, fileinfo) {
                 assert.strictEqual(fileinfo.isNew, true);
                 assert.strictEqual(fileinfo.isUpdated, false);
                 done();
@@ -99,15 +91,17 @@ describe('filedb', function() {
         });
 
         it('should return fileinfo object with isNew === false, isUpdated === true for updated file', function(done) {
-            instance.exists('testfile3', function(exists, err, fileinfo) {
+            instance.exists(fileid3, function(exists, err, fileinfo) {
                 assert.strictEqual(fileinfo.isNew, false);
                 assert.strictEqual(fileinfo.isUpdated, true);
                 done();
             });
         });
-
     });
 
-    // afterEach(function() {
-    // });
+
+    after(function() {
+        removeFilesDir();
+    });
+
 });
