@@ -7,7 +7,8 @@
     var mkpath = require('mkpath');
     var md5 = require('MD5');
     var errors =  {
-        'nofile': 'The file does not exists'
+        'nofile': 'The file does not exists',
+        'emptyfileid': 'Empty file id'
     };
 
 
@@ -28,10 +29,16 @@
 
         /**
          * @function exists
-         * @param id:String file id returned by save
+         * @param id:String file id returned by save or list
          * @param callback:Function callback with arguments [exists, err, fileinfo]
          */
         exists: function(id, callback) {
+            this._checkCallback(callback);
+            if((id || '').length === 0) {
+                callback(false, null, null);
+                return;
+            }
+
             glob(this._getFilepath(id) + '?(' + this.FLAG_NEW + '|' + this.FLAG_UPDATED + ')', function(err, files) {
                 var isFile = files && files.length;
                 var filename = isFile ? files[0] : null;
@@ -45,7 +52,13 @@
          * @param callback:Function callback with arguments [err, data]
          * @param markAsViewed:boolean if turn off new/updated flag after reading, defaults to true
          */
-        read: function(id, callback, markAsViewed) { //id || filename; markAsViewed - maybe ghost(Mode) or something
+        read: function(id, callback, markAsViewed) {
+            this._checkCallback(callback);
+            if((id || '').length === 0) {
+                callback(new Error(errors.emptyfileid), null);
+                return;
+            }
+
             markAsViewed = (markAsViewed == false ? false : true);
             this.exists(id, function(exists, err, fileinfo) {
                 if(err) {
@@ -67,18 +80,19 @@
          * @param markAsChanged:boolean if turn on new/updated flag after reading, defaults to true
          */
         write: function(data, callback, markAsChanged) {
+            this._checkCallback(callback);
+
             if(!(data instanceof String)) {
                 data = JSON.stringify(data);
             }
-
             var id = this._getFileid(data);
-            markAsViewed = (markAsViewed == false ? false : true);
+            markAsChanged = (markAsChanged == false ? false : true);
             this.exists(id, function(exists, err, fileinfo) {
                 var flag = this.FLAG_NEW;
                 if(exists) {
                     flag = this.FLAG_UPDATED;
                 }
-                this._write(id, flag, data, callback, markAsViewed);
+                this._write(fileinfo, flag, data, callback, markAsChanged);
             }.bind(this));
         },
 
@@ -100,24 +114,26 @@
             }.bind(this));
         },
 
-        _write: function(id, flag, data, callback, markAsViewed) {
-            var path = this._getPath(id);
-            mkpath(path, function(err) {
+        _write: function(fileinfo, flag, data, callback, markAsChanged) {
+            mkpath(fileinfo.path, function(err) {
                 if(err) {
                     callback(false, err, null);
                 }
                 else {
-                    this._writeFile(id, path, flag, data, callback, markAsViewed);
+                    this._writeFile(fileinfo, flag, data, callback, markAsChanged);
                 }
             }.bind(this));
         },
 
-        _writeFile: function(id, path, flag, data, callback, markAsViewed) {
-            fs.writeFile(path, data, function(err) {
-                if(err) {
-                    throw new Error('Error saving file ' + path);
-                }
-            }.bind(this));
+        _writeFile: function(fileinfo, flag, data, callback, markAsChanged) {
+            if(flag === this.FLAG_NEW) {
+                fs.writeFile(fileinfo.rawPath, data, function(err) {
+                    callback(!(err !== null && err !== undefined), err, fileinfo);
+                }.bind(this));
+            }
+            else {
+
+            }
         },
 
         _getFileid: function(data) {
@@ -160,6 +176,12 @@
             fs.rename(oldPath, this._getFilepath(id + suffix), function(err) {
                 callback(err);
             });
+        },
+
+        _checkCallback: function(callback) {
+            if(!(callback instanceof Function)) {
+                throw new Error('Callback should be a function');
+            }
         }
     };
 

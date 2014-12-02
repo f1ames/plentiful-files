@@ -19,6 +19,13 @@ describe('filedb', function() {
             });
         });
 
+        it('should return false when filename empty', function(done) {
+            instance.exists(undefined, function(exists, err, fileinfo) {
+                assert.strictEqual(exists, false);
+                done();
+            });
+        });
+
         it('should return true when file exists', function(done) {
             instance.exists(fileid1, function(exists, err, fileinfo) {
                 assert.strictEqual(exists, true);
