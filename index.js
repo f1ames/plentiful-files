@@ -8,6 +8,7 @@
     var md5 = require('MD5');
     var errors =  {
         'nofile': 'The file does not exists',
+        'nocallback': 'Callback should be a function',
         'emptyfileid': 'Empty file id'
     };
 
@@ -15,8 +16,8 @@
     var PlentifulFiles = function(config) {
         this.prefix = config.prefix || 'PF';
         this.dir = path.normalize(config.dir + '/' || './');
-        this.markCreate = config.markCreate === undefined ? true : config.markCreate;
-        this.markUpdate = config.markUpdate === undefined ? true : config.markUpdate;
+        // this.markCreate = config.markCreate === undefined ? true : config.markCreate; //@TODO test
+        // this.markUpdate = config.markUpdate === undefined ? true : config.markUpdate; //@TODO test
     };
     PlentifulFiles.prototype = {
         ALL: 0,
@@ -33,7 +34,7 @@
          * @param callback:Function callback with arguments [exists, err, fileinfo]
          */
         exists: function(id, callback) {
-            this._checkCallback(callback);
+            this._checkCallback(callback); //@TODO test empty callback
             if((id || '').length === 0) {
                 callback(false, null, null);
                 return;
@@ -82,26 +83,82 @@
         write: function(data, callback, markAsChanged) {
             this._checkCallback(callback);
 
-            if(!(data instanceof String)) {
-                data = JSON.stringify(data);
-            }
             var id = this._getFileid(data);
+            data = JSON.stringify(data);
             markAsChanged = (markAsChanged == false ? false : true);
             this.exists(id, function(exists, err, fileinfo) {
-                var flag = this.FLAG_NEW;
                 if(exists) {
-                    flag = this.FLAG_UPDATED;
+                    this._writeExistingFile(fileinfo, data, callback, markAsChanged);
                 }
-                this._write(fileinfo, flag, data, callback, markAsChanged);
+                else {
+                    this._writeNewFile(id, data, callback, markAsChanged);
+                }
             }.bind(this));
         },
 
-        list: function(type) { //should return lazy iterator, nah
+        /**
+         * @function unlink
+         * @param id:String file id returned by save or exists
+         * @param callback:Function callback with arguments [success, err]
+         */
+        unlink: function(id, callback) {
+            this._checkCallback(callback);
+            if((id || '').length === 0) {
+                callback(false, new Error(errors.emptyfileid));
+                return;
+            }
 
+            this.exists(id, function(exists, err, fileinfo) {
+                if(err) {
+                    callback(false, err);
+                }
+                else if(!exists) {
+                    callback(false, new Error(errors.nofile));
+                }
+                else {
+                    this._unlink(fileinfo.rawPath, callback);
+                }
+            }.bind(this));
+        },
+
+        /**
+         * @function list
+         * @param type:integer list by status (ALL, NEW, UPDATED, CHANGED)
+         * @param callback:Function callback with arguments [success, err, list]
+         */
+        list: function(type, callback) {//@TODO list cache
+            this._checkCallback(callback);
+
+            var pattern = '*?(' + this.FLAG_NEW + '|' + this.FLAG_UPDATED + ')';
+            switch(type) {
+                case this.NEW:
+                    pattern = '*+(' + this.FLAG_NEW + ')';
+                    break
+                case this.UPDATED:
+                    pattern = '*+(' + this.FLAG_UPDATED + ')';
+                    break
+                case this.CHANGED:
+                    pattern = '*+(' + this.FLAG_NEW + '|' + this.FLAG_UPDATED + ')';
+                    break
+            }
+
+            glob(this.dir + '**/' + pattern, {nodir: true}, function(err, files) {
+                err = err || null;
+
+                var length = files.length;
+                var filesinfo = [];
+                for(var i = 0; i < length; i++) {
+                    var id = files[i].split('/').pop().split('.').shift();
+                    filesinfo.push(this._createFileInfo(id, files[i]));
+                }
+
+                callback(err === null, err, filesinfo);
+            }.bind(this));
         },
 
         _read: function(id, path, callback, markAsViewed) {
             fs.readFile(path, 'utf8', function(err, data) {
+                data = JSON.parse(data);
                 if(markAsViewed) {
                     var newCallback = function(newErr) {
                         callback(newErr, data);
@@ -114,26 +171,59 @@
             }.bind(this));
         },
 
-        _write: function(fileinfo, flag, data, callback, markAsChanged) {
-            mkpath(fileinfo.path, function(err) {
+        _writeNewFile: function(fileid, data, callback, markAsChanged) {
+            var path = this._getPath(fileid);
+
+            mkpath(path, function(err) {
                 if(err) {
                     callback(false, err, null);
                 }
                 else {
-                    this._writeFile(fileinfo, flag, data, callback, markAsChanged);
+                    this._writeFile(fileid, markAsChanged ? this.FLAG_NEW : '', data, callback);
                 }
             }.bind(this));
         },
 
-        _writeFile: function(fileinfo, flag, data, callback, markAsChanged) {
-            if(flag === this.FLAG_NEW) {
-                fs.writeFile(fileinfo.rawPath, data, function(err) {
-                    callback(!(err !== null && err !== undefined), err, fileinfo);
-                }.bind(this));
+        _writeExistingFile: function(fileinfo, data, callback, markAsChanged) {
+            var flag = '';
+            if(markAsChanged) {
+                flag = this.FLAG_UPDATED;
             }
-            else {
+            else if(fileinfo.isNew) {
+                flag  = this.FLAG_NEW;
+            }
+            else if(fileinfo.isUpdated) {
+                flag = this.FLAG_UPDATED;
+            }
 
-            }
+            var newCallback = function(err) {
+                if(err) {
+                    callback(false, err, null);
+                }
+                else {
+                    this._writeFile(fileinfo.file, flag, data, callback);
+                }
+            }.bind(this);
+
+            this._changeFileStatus(fileinfo.file, fileinfo.rawPath, newCallback, flag);
+        },
+
+        _writeFile: function(fileid, flag, data, callback) {
+            var filepath = this._getFilepath(fileid, flag);
+            fs.writeFile(this._getFilepath(fileid, flag), data, function(err) {
+                callback(!(err !== null && err !== undefined), err, this._createFileInfo(fileid, filepath));
+            }.bind(this));
+        },
+
+        _unlink: function(path, callback) {
+            fs.unlink(path, function(err) {
+                if(err) {
+                    callback(false, err);
+                }
+                else {
+                    callback(true, null);
+                }
+            });
         },
 
         _getFileid: function(data) {
@@ -148,7 +238,7 @@
             flag = flag || '';
             return this._getPath(id) + id + flag;
         },
-        
+
         _createFileInfo: function(id, filename) {
             if(filename) {
                 var flag = '.' + filename.split('.').pop();
@@ -163,14 +253,14 @@
             return null;
         },
 
-        _changeFileStatus: function(id, oldPath, callback, status) {
+        _changeFileStatus: function(id, oldPath, callback, flag) {
             var suffix = '';
-            switch(status) {
-                case this.NEW:
-                    suffix = FLAG_NEW;
+            switch(flag) {
+                case this.FLAG_NEW:
+                    suffix = this.FLAG_NEW;
                     break;
-                case this.UPDATED:
-                    suffix = FLAG_UPDATED;
+                case this.FLAG_UPDATED:
+                    suffix = this.FLAG_UPDATED;
                     break;
             };
             fs.rename(oldPath, this._getFilepath(id + suffix), function(err) {
@@ -180,7 +270,7 @@
 
         _checkCallback: function(callback) {
             if(!(callback instanceof Function)) {
-                throw new Error('Callback should be a function');
+                throw new Error(errors.nocallback);
             }
         }
     };

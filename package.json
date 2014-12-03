@@ -1,0 +1,39 @@
+{
+  "name": "plentiful-files",
+  "version": "0.0.1",
+  "description": "Abstract layer for managing big sets of files",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "glob": "^4.3.1",
+    "MD5": "^1.2.1",
+    "mkpath": "^0.1.0"
+  },
+  "devDependencies": {
+    "rimraf": "^2.2.8"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/f1ames/plentiful-files.git"
+  },
+  "keywords": [
+    "files",
+    "fs",
+    "read",
+    "write",
+    "unlink",
+    "manage",
+    "crawler"
+  ],
+  "author": "f1ames <krzysztof@krzton.com> (https://github.com/f1ames)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/f1ames/plentiful-files/issues"
+  },
+  "homepage": "https://github.com/f1ames/plentiful-files"
+}

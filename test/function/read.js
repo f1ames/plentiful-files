@@ -6,14 +6,14 @@ describe('filedb', function() {
         filename3 = 'testfile3r';
 
     beforeEach(function() {
-        createFilesDir(); 
+        createFilesDir();
         fileid1 = createFile(filename1);
         fileid2 = createFile(filename2, instance.FLAG_NEW);
         fileid3 = createFile(filename3, instance.FLAG_UPDATED);
     });
 
 
-    describe('#read()', function() {
+    describe('#read()', function() {//@TODO invalid test
         it('should throw error when there is no file', function(done) {
             assert.throws(
                 instance.read('nofile', function(err, data) {
