@@ -24,8 +24,8 @@
         NEW: 1,
         UPDATED: 2,
         CHANGED: 3,
-        FLAG_NEW: '.pfnew', //private
-        FLAG_UPDATED: '.pfupdated', //private
+        FLAG_NEW: '.pfnew', //@TODO private
+        FLAG_UPDATED: '.pfupdated', //@TODO private
 
 
         /**
@@ -34,7 +34,7 @@
          * @param callback:Function callback with arguments [exists, err, fileinfo]
          */
         exists: function(id, callback) {
-            this._checkCallback(callback); //@TODO test empty callback
+            this._checkCallback(callback);
             if((id || '').length === 0) {
                 callback(false, null, null);
                 return;
