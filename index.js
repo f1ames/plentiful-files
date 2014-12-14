@@ -83,8 +83,9 @@
         write: function(data, callback, markAsChanged) {
             this._checkCallback(callback);
 
-            var id = this._getFileid(data);
             data = JSON.stringify(data);
+            var id = this._getFileid(data);
+            
             markAsChanged = (markAsChanged == false ? false : true);
             this.exists(id, function(exists, err, fileinfo) {
                 if(exists) {

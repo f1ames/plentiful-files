@@ -16,7 +16,7 @@ describe('filedb', function() {
     describe('#write()', function() {
         it('should write string data to non-existing file and mark file as new', function(done) {
             var filedata = 'testfile0w';
-            var fileid = instance._getFileid(filedata);
+            var fileid = instance._getFileid(JSON.stringify(filedata));
             var filepath = instance._getFilepath(fileid);
 
             assert.strictEqual(fs.existsSync(filepath), false);
@@ -80,7 +80,7 @@ describe('filedb', function() {
     describe('#write() - markAsChanged', function() {
         it('should write string data to non-existing file and not mark file as new if markAsChanged = false', function(done) {
             var filedata = 'testfile0w';
-            var fileid = instance._getFileid(filedata);
+            var fileid = instance._getFileid(JSON.stringify(filedata));
             var filepath = instance._getFilepath(fileid);
 
             assert.strictEqual(fs.existsSync(filepath), false);

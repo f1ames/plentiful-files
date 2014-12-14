@@ -15,7 +15,7 @@ global.instanceNoPath = new filedb({
 
 
 global.createFile = function(filename, flag) {
-    var fileid = instance._getFileid(filename);
+    var fileid = instance._getFileid(JSON.stringify(filename));
     var filepath = instance._getFilepath(fileid, flag);
     mkpath.sync(instance._getPath(fileid));
     fs.writeFileSync(filepath, JSON.stringify(filename));
