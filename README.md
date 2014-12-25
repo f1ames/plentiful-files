@@ -11,6 +11,7 @@ Library for managing big sets of files. Implements 5 only needed functions for f
 ## Usage
 
 Set up:
+
     var pf = require('plentiful-files');
     var pfInstance = new pf({
         prefix: 'PF',
@@ -18,11 +19,13 @@ Set up:
     });
 
 Exists:
+
     pfInstance.exists(fileid, function(exists, err) {
         ...
     });
 
 Read:
+
     pfInstance.read(fileid, function(exists, err) {
         ...
     });
