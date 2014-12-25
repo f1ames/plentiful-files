@@ -15,10 +15,9 @@
 
     var PlentifulFiles = function(config) {
         this.prefix = config.prefix || 'PF';
-        this.dir = path.normalize(config.dir + '/' || './');
-        // this.markCreate = config.markCreate === undefined ? true : config.markCreate; //@TODO test
-        // this.markUpdate = config.markUpdate === undefined ? true : config.markUpdate; //@TODO test
+        this.dir = path.normalize(config.dir + '/' || './'); 
     };
+
     PlentifulFiles.prototype = {
         ALL: 0,
         NEW: 1,
@@ -32,6 +31,7 @@
          * @function exists
          * @param id:String file id returned by save or list
          * @param callback:Function callback with arguments [exists, err, fileinfo]
+         * @description checks if file with given id exists
          */
         exists: function(id, callback) {
             this._checkCallback(callback);
@@ -49,9 +49,10 @@
 
         /**
          * @function read
-         * @param id:String file id returned by save or exists
+         * @param id:String file id returned by save, exists or list
          * @param callback:Function callback with arguments [err, data]
-         * @param markAsViewed:boolean if turn off new/updated flag after reading, defaults to true
+         * @param markAsViewed:boolean if false turn off new/updated flag change after reading, defaults to true
+         * @description reads content of given file if file exists otherwise return error
          */
         read: function(id, callback, markAsViewed) {
             this._checkCallback(callback);
@@ -76,9 +77,10 @@
 
         /**
          * @function write
-         * @param data:Object data to write to the file (String|JSON.stringify(data))
+         * @param data:Any data to write to the file, is always stringified (so could be Object, String etc.)
          * @param callback:Function callback with arguments [success, err, fileinfo]
-         * @param markAsChanged:boolean if turn on new/updated flag after reading, defaults to true
+         * @param markAsChanged:boolean if false turn off new/updated flag change after writing, defaults to true
+         * @description writes data to file, for nonexisting files creates new file, for exisiting overwrites file content
          */
         write: function(data, callback, markAsChanged) {
             this._checkCallback(callback);
@@ -99,8 +101,9 @@
 
         /**
          * @function unlink
-         * @param id:String file id returned by save or exists
+         * @param id:String file id returned by save, exists or list
          * @param callback:Function callback with arguments [success, err]
+         * @description remove file with given id
          */
         unlink: function(id, callback) {
             this._checkCallback(callback);
@@ -124,8 +127,9 @@
 
         /**
          * @function list
-         * @param type:integer list by status (ALL, NEW, UPDATED, CHANGED)
+         * @param type:integer only files with given status will be listed (ALL, NEW, UPDATED, CHANGED)
          * @param callback:Function callback with arguments [success, err, list]
+         * @description lists all files with given status
          */
         list: function(type, callback) {//@TODO list cache
             this._checkCallback(callback);
@@ -228,7 +232,7 @@
         },
 
         _getFileid: function(data) {
-            return md5(this.dir + this.prefix + data.length + data.substr(0, 10));
+            return md5(this.dir + this.prefix + data.length + data.substr(0, 25));
         },
 
         _getPath: function(id) {

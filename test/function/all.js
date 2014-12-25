@@ -2,6 +2,10 @@ describe('filedb', function() {
 
     var fileid1;
 
+    before(function() {
+        createFilesDir();
+    });
+
 
     describe('all', function() {
         it('write - should write to a file', function(done) {
@@ -27,6 +31,7 @@ describe('filedb', function() {
 
     after(function() {
         removeFilesDir();
+        removeFilesDir(path2);
     });
 
 });

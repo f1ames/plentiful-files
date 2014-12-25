@@ -1,13 +1,15 @@
 describe('filedb', function() {
 
-    var fileid1, fileid2, fileid3,
+    var fileid1, fileid1o, fileid2, fileid3,
         filedata1 = 'testfile1w',
+        filedata1o = {text: 'testfile1wo', number: 12345},
         filedata2 = 'testfile2w',
         filedata3 = 'testfile3w';
 
     beforeEach(function() {
         createFilesDir();
         fileid1 = createFile(filedata1);
+        fileid1o = createFile(filedata1o);
         fileid2 = createFile(filedata2, instance.FLAG_NEW);
         fileid3 = createFile(filedata3, instance.FLAG_UPDATED);
     });
@@ -30,6 +32,22 @@ describe('filedb', function() {
             });
         });
 
+        it('should write object data as string to non-existing file and mark file as new', function(done) {
+            var filedata = {text: 'testfile0w'};
+            var fileid = instance._getFileid(JSON.stringify(filedata));
+            var filepath = instance._getFilepath(fileid);
+
+            assert.strictEqual(fs.existsSync(filepath), false);
+            assert.strictEqual(fs.existsSync(filepath + instance.FLAG_NEW), false);
+
+            instance.write(filedata, function() {
+                assert.strictEqual(fs.existsSync(filepath), false);
+                assert.strictEqual(fs.existsSync(filepath + instance.FLAG_NEW), true);
+                assert.deepEqual(JSON.parse(fs.readFileSync(filepath + instance.FLAG_NEW, 'utf8')), filedata);
+                done();
+            });
+        });
+
         it('should write string data to existing file and mark file as updated', function(done) {
             var filepath = instance._getFilepath(fileid1);
 
@@ -40,6 +58,20 @@ describe('filedb', function() {
                 assert.strictEqual(fs.existsSync(filepath), false);
                 assert.strictEqual(fs.existsSync(filepath + instance.FLAG_UPDATED), true);
                 assert.strictEqual(JSON.parse(fs.readFileSync(filepath + instance.FLAG_UPDATED, 'utf8')), filedata1);
+                done();
+            });
+        });
+
+        it('should write object data as string data to existing file and mark file as updated', function(done) {
+            var filepath = instance._getFilepath(fileid1o);
+
+            assert.strictEqual(fs.existsSync(filepath), true);
+            assert.strictEqual(fs.existsSync(filepath + instance.FLAG_UPDATED), false);
+
+            instance.write(filedata1o, function() {
+                assert.strictEqual(fs.existsSync(filepath), false);
+                assert.strictEqual(fs.existsSync(filepath + instance.FLAG_UPDATED), true);
+                assert.deepEqual(JSON.parse(fs.readFileSync(filepath + instance.FLAG_UPDATED, 'utf8')), filedata1o);
                 done();
             });
         });
