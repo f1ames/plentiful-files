@@ -12,27 +12,33 @@ Async library for managing big sets of files. Implements 5 only needed functions
 
 Set up:
 
-    var pf = require('plentiful-files');
-    var pfInstance = new pf({
-        prefix: 'PF',
-        dir: './myfiles/'
-    });
+```javascript
+var pf = require('plentiful-files');
+var pfInstance = new pf({
+    prefix: 'PF',
+    dir: './myfiles/'
+});
+```
 
 Exists:
 
-    pfInstance.exists(fileid, function(exists, err) {
-        ...
-    });
+```javascript
+pfInstance.exists(fileid, function(exists, err) {
+    ...
+});
+```
 
 Read:
 
-    pfInstance.read(fileid, function(err, data) {
-        ...
-    });
+```javascript
+pfInstance.read(fileid, function(err, data) {
+    ...
+});
 
-    pfInstance.read(fileid, function(err, data) {
-        ...
-    }, false);
+pfInstance.read(fileid, function(err, data) {
+    ...
+}, false);
+```
 
 Write:
 
