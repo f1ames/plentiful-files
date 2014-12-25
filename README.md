@@ -1,6 +1,6 @@
-# plentiful-files
+# plentiful-files [![Build Status](https://travis-ci.org/f1ames/plentiful-files.svg?branch=master)](https://travis-ci.org/f1ames/plentiful-files)
 
-Library for managing big sets of files. Implements 5 only needed functions for file managment: exists, read, write, unlink, list.
+Async library for managing big sets of files. Implements 5 only needed functions for file managment: exists, read, write, unlink, list.
 
 
 ## Installation
