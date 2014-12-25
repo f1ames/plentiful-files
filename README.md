@@ -26,10 +26,10 @@ Exists:
 
 Read:
 
-    pfInstance.read(fileid, function(exists, err) {
+    pfInstance.read(fileid, function(err, data) {
         ...
     });
 
-    pfInstance.read(fileid, function(exists, err, false) {
+    pfInstance.read(fileid, function(err, data) {
         ...
-    });
+    }, false);
