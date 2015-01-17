@@ -1,6 +1,6 @@
 {
   "name": "plentiful-files",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Abstract layer for managing big sets of files",
   "main": "index.js",
   "directories": {
