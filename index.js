@@ -1,7 +1,7 @@
 (function(namespace) {
     'use strict';
 
-    var fs = require('fs');
+    var fs = require('graceful-fs');
     var glob = require('glob');
     var path = require('path');
     var mkpath = require('mkpath');
@@ -180,7 +180,7 @@
             var path = this._getPath(fileid);
 
             mkpath(path, function(err) {
-                if(err) {
+                if(err) {//@TODO if err.code == EEXIST, try write anyway (it's concurrency problem)
                     callback(false, err, null);
                 }
                 else {
